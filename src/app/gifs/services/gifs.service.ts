@@ -15,6 +15,17 @@ export class GifService {
   trendingGifs = signal<Gif[]>([]);
   trendingGifsLoaded = signal(true);
 
+
+  // convertir a arreglos de 3 en 3 para el masonry
+  trendingGifsInRows = computed<Gif[][]> ( () => {
+    const groups = [];
+    for ( let i = 0; i < this.trendingGifs().length; i += 3) {
+      groups.push( this.trendingGifs().slice(i, i + 3) );
+    }
+    return groups;
+  })
+
+
   // LOCAL STORAGE / HISTORY
   searchHistory = signal<Record<string, Gif[]>>(this.loadFromLocalStorage());
   searchHistoryKeys = computed(() => Object.keys(this.searchHistory()));
