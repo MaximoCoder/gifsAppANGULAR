@@ -11,9 +11,10 @@ import { map, Observable, tap } from 'rxjs';
 })
 export class GifService {
   private http = inject(HttpClient);
+  private trendingPage = signal(0);
   private readonly STORAGE_KEY = 'gif-search-history';
   trendingGifs = signal<Gif[]>([]);
-  trendingGifsLoaded = signal(true);
+  trendingGifsLoaded = signal(false);
 
 
   // convertir a arreglos de 3 en 3 para el masonry
@@ -34,16 +35,23 @@ export class GifService {
     this.loadTrendingGifs();
   }
   loadTrendingGifs() {
+
+    if(this.trendingGifsLoaded()) return;
+
+    this.trendingGifsLoaded.set(true);
+
     this.http
       .get<GiphyResponse>(`${environment.giphyUrl}/gifs/trending`, {
         params: {
           api_key: environment.giphyApiKey,
           limit: '25',
+          offset: (this.trendingPage() * 25).toString(),
         },
       })
       .subscribe((resp) => {
+        this.trendingPage.update((value) => value + 1);
         const gifs = GifMapper.mapGiphyItemsToGifArray(resp.data);
-        this.trendingGifs.set(gifs);
+        this.trendingGifs.update(currentGifs => [...currentGifs, ...gifs]);
         this.trendingGifsLoaded.set(false);
       });
   }
